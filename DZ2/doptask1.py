@@ -2,10 +2,15 @@
 которая найдёт сумму элементов списка,
 стоящих на нечётной позиции.'''
 
-x = [2, 3, 5, 9, 3]
 
-summ = 0
-for i in range(1, len(x), 2):
-    if i % 2 == 1:
-        summ += x[i]
-print(f"{x} -> сумма элементов на нечётных позициях: {summ}")
+number = int(input('Введите размер списка '))
+list = []
+sum = 0
+for i in range(number):
+
+    if i % 2 != 0:
+        sum += list[i]
+print(list)
+
+
+print(len(number))
