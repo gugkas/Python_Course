@@ -1,4 +1,4 @@
-# Задача No(49) 38.
+# Задача  38.
 # Решение в группах Создать телефонный справочник с возможностью импорта и
 # экспорта данных в формате .txt. Фамилия, имя, отчество, номер телефона -
 # данные, которые должны находиться в файле.
@@ -8,171 +8,175 @@
 # записи(Например имя или фамилию человека)
 # 4. Использование функций. Ваша программа не должна быть линейной
 
-def choose_action(phonebook):
-    while True:
-        print('Что вы хотите сделать?')
-        user_choice = input('1 - Импортировать данные\n2 - Найти контакт\n3 - Добавить контакт\n\4 - Изменить контакт\n5 - Удалить контакт\n6 - Просмотреть все контакты\n0 - Выйти из приложения\n')
-        print()
-        if user_choice == '1':
-            file_to_add = input('Введите название импортируемого файла: ')
-            import_data(file_to_add, phonebook)
-        elif user_choice == '2':
-            contact_list = read_file_to_dict(phonebook)
-            find_number(contact_list)
-        elif user_choice == '3':
-            add_phone_number(phonebook)
-        elif user_choice == '4':
-            change_phone_number(phonebook)
-        elif user_choice == '5':
-            delete_contact(phonebook)
-        elif user_choice == '6':
-            show_phonebook(phonebook)
-        elif user_choice == '0':
-            print('До свидания!')
-            break
-        else:
-            print('Неправильно выбрана команда!')
-            print()
-            continue
+def show_menu() -> int:
+    print("\nВыберите необходимое действие:\n"
+          "1. Отобразить весь справочник\n"
+          "2. Найти абонента по фамилии\n"
+          "3. Найти абонента по номеру телефона\n"
+          "4. Добавить абонента в справочник\n"
+          "5. Удалить абонента из справочника\n"
+          "6. Сохранить справочник в текстовом формате\n"
+          "7. Закончить работу")
+    choice = int(input())
+    return choice
 
 
-def import_data(file_to_add, phonebook):
-    try:
-        with open(file_to_add, 'r', encoding='utf-8') as new_contacts, open(phonebook, 'a', encoding='utf-8') as file:
-            contacts_to_add = new_contacts.readlines()
-            file.writelines(contacts_to_add)
-    except FileNotFoundError:
-        print(f'{file_to_add} не найден')
+def work_with_phonebook():
+    choice = show_menu()
+    phone_book = read_csv('phonebook.csv')
+
+    while (choice != 7):
+        if choice == 1:  # 1. Отобразить весь справочник
+            print_result(phone_book)
+        elif choice == 2:  # 2. Найти абонента по фамилии
+            name = get_search_name()
+            print_result(find_by_name(phone_book, name))
+        elif choice == 3:  # 3. Найти абонента по номеру телефона
+            number = get_search_number()
+            print_result(find_by_number(phone_book, number))
+        elif choice == 4:  # 4. Добавить абонента в справочник
+            user_data = get_new_user()
+            add_user(phone_book, user_data)
+            write_csv('phonebook.csv', phone_book)
+        elif choice == 5:  # 5. Удалить абонента из справочника
+            name = get_search_name()
+            print_result(find_by_name(phone_book, name))
+            delete_user(phone_book, find_by_name(phone_book, name))
+            write_csv('phonebook.csv', phone_book)
+        elif choice == 6:  # Сохранить справочник в текстовом формате
+            file_name = get_file_name()
+            write_txt(file_name, phone_book)
+        choice = show_menu()
 
 
-def read_file_to_dict(file_name):
-    with open(file_name, 'r', encoding='utf-8') as file:
-        lines = file.readlines()
-    headers = ['Фамилия', 'Имя', 'Номер телефона']
-    contact_list = []
-    for line in lines:
-        line = line.strip().split()
-        contact_list.append(dict(zip(headers, line)))
-    return contact_list
+def read_csv(filename: str) -> list:
+    data = []
+    fields = ["Фамилия", "Имя", "Телефон", "Описание"]
+    with open(filename, 'r', encoding='utf-8') as fin:
+        for line in fin:
+            record = dict(zip(fields, line.strip().split(',')))
+            data.append(record)
+    return data
 
 
-def read_file_to_list(file_name):
-    with open(file_name, 'r', encoding='utf-8') as file:
-        contact_list = []
-        for line in file.readlines():
-            contact_list.append(line.split())
-    return contact_list
+def write_csv(filename: str, data: list):
+    with open(filename, 'w', encoding='utf-8') as fout:
+        for i in range(len(data)):
+            s = ''
+            for v in data[i].values():
+                s += v + ','
+            fout.write(f'{s[:-1]}\n')
 
 
-def search_parameters():
-    print('По какому полю выполнить поиск?')
-    search_field = input(
-        '1 - по фамилии\n2 - по имени\n3 - по номеру телефона\n')
-    print()
-    search_value = None
-    if search_field == '1':
-        search_value = input('Введите фамилию для поиска: ')
-        print()
-    elif search_field == '2':
-        search_value = input('Введите имя для поиска: ')
-        print()
-    elif search_field == '3':
-        search_value = input('Введите номер для поиска: ')
-        print()
-    return search_field, search_value
+def write_txt(filename: str, data: list):
+    txt_filename = filename + '.txt'
+    print(txt_filename)
+    with open(txt_filename, 'w', encoding='utf-8') as fout:
+        s = '│'
+        fout.write('┌' + '─'*20 + '┬' + '─'*20 + '┬' +
+                   '─'*20 + '┬' + '─'*20 + '┐'+'\n')
+        fields = ["Фамилия", "Имя", "Телефон", "Описание"]
+        for v in fields:
+            s += v.center(20) + "│"
+        fout.write(f'{s}\n')
+        fout.write('├' + '─'*20 + '┼' + '─'*20 + '┼' +
+                   '─'*20 + '┼' + '─'*20 + '┤' + '\n')
+
+        for i in range(len(data)):
+            s = '│'
+            for v in data[i].values():
+                s += v.center(20) + "│"
+            fout.write(f'{s}\n')
+            fout.write('├' + '─'*20 + '┼' + '─'*20 + '┼' +
+                       '─'*20 + '┼' + '─'*20 + '┤' + '\n')
+        fout.write(f'Всего сохранено {len(data)} записей')
 
 
-def find_number(contact_list):
-    search_field, search_value = search_parameters()
-    search_value_dict = {'1': 'Фамилия', '2': 'Имя', '3': 'Номер телефона'}
-    found_contacts = []
-    for contact in contact_list:
-        if contact[search_value_dict[search_field]] == search_value:
-            found_contacts.append(contact)
-    if len(found_contacts) == 0:
-        print('Контакт не найден!')
-    else:
-        print_contacts(found_contacts)
-    print()
+def print_result(data: list):
+    s = '│'
+    print('┌' + '─'*20 + '┬' + '─'*20 + '┬' + '─'*20 + '┬' + '─'*20 + '┐')
+    fields = ["Фамилия", "Имя", "Телефон", "Описание"]
+    for v in fields:
+        s += v.center(20) + "│"
+    print(f'{s}')
+    print('├' + '─'*20 + '┼' + '─'*20 + '┼' + '─'*20 + '┼' + '─'*20 + '┤')
+
+    for i in range(len(data)):
+        s = '│'
+        for v in data[i].values():
+            s += v.center(20) + "│"
+        print(f'{s}')
+        print('├' + '─'*20 + '┼' + '─'*20 + '┼' + '─'*20 + '┼' + '─'*20 + '┤')
+    print(f'Всего найдено {len(data)} записей')
 
 
-def get_new_number():
-    last_name = input('Введите фамилию: ')
-    first_name = input('Введите имя: ')
-    phone_number = input('Введите номер телефона: ')
-    return last_name, first_name, phone_number
+def find_by_name(data: list, first_name):
+    search_by_name = []
+    for line in data:
+        index = line['Фамилия'].lower()
+        if index.find(first_name.lower()) == 0:
+            search_by_name.append(dict(line))
+    return search_by_name
 
 
-def add_phone_number(file_name):
-    info = ' '.join(get_new_number())
-    with open(file_name, 'a', encoding='utf-8') as file:
-        file.write(f'{info}\n')
+def find_by_number(data: list, number):
+    search_by_number = []
+    for line in data:
+        index = line['Телефон']
+        if index.find(number) == 0:
+            search_by_number.append(dict(line))
+    return search_by_number
 
 
-def show_phonebook(file_name):
-    list_of_contacts = sorted(read_file_to_dict(
-        file_name), key=lambda x: x['Фамилия'])
-    print_contacts(list_of_contacts)
-    print()
-    return list_of_contacts
+def get_new_user():
+    line = {}
+    fields = ["Фамилия", "Имя", "Телефон", "Описание"]
+    for v in fields:
+        data = input(f'Введите {v}: ')
+        line[v] = data
+    return line
 
 
-def search_to_modify(contact_list: list):
-    search_field, search_value = search_parameters()
-    search_result = []
-    for contact in contact_list:
-        if contact[int(search_field) - 1] == search_value:
-            search_result.append(contact)
-    if len(search_result) == 1:
-        return search_result[0]
-    elif len(search_result) > 1:
-        print('Найдено несколько контактов')
-        for i in range(len(search_result)):
-            print(f'{i + 1} - {search_result[i]}')
-        num_count = int(
-            input('Выберите номер контакта, который нужно изменить/удалить: '))
-        return search_result[num_count - 1]
-    else:
-        print('Контакт не найден')
-    print()
+def delete_user(data: list, name):
+    # print(f'name:{name}')
+    tmp = []
+    for record in name:
+        if record in data:
+            print('Найдена запись для удаления:')
+            tmp.append(record)
+            print_result(tmp)
+            confirmation = input('Для подтверждения удаления записи введите ""yes"",\n'
+                                 'для отмены операции удаления введите ""no"":')
+            if confirmation == 'yes':
+                data.remove(record)
+            elif confirmation == 'no':
+                return
+            tmp.clear()
 
 
-def change_phone_number(file_name):
-    contact_list = read_file_to_list(file_name)
-    number_to_change = search_to_modify(contact_list)
-    contact_list.remove(number_to_change)
-    print('Какое поле вы хотите изменить?')
-    field = input('1 - Фамилия\n2 - Имя\n3 - Номер телефона\n')
-    if field == '1':
-        number_to_change[0] = input('Введите фамилию: ')
-    elif field == '2':
-        number_to_change[1] = input('Введите имя: ')
-    elif field == '3':
-        number_to_change[2] = input('Введите номер телефона: ')
-    contact_list.append(number_to_change)
-    with open(file_name, 'w', encoding='utf-8') as file:
-        for contact in contact_list:
-            line = ' '.join(contact) + '\n'
-            file.write(line)
+def add_user(data: list, user_data: dict):
+    data.append(dict(user_data))
+    return data
 
 
-def delete_contact(file_name):
-    contact_list = read_file_to_list(file_name)
-    number_to_change = search_to_modify(contact_list)
-    contact_list.remove(number_to_change)
-    with open(file_name, 'w', encoding='utf-8') as file:
-        for contact in contact_list:
-            line = ' '.join(contact) + '\n'
-            file.write(line)
+def get_search_name():
+    first_name = input("Введите фамилию: ")
+    return first_name
 
 
-def print_contacts(contact_list: list):
-    for contact in contact_list:
-        for key, value in contact.items():
-            print(f'{key}: {value:12}', end='')
-        print()
+def get_search_number():
+    name = input("Введите номер: ")
+    return name
 
 
-if __name__ == '__main__':
-    file = 'Phonebook.txt'
-    choose_action(file)
+def get_file_name():
+    name = input("Введите имя файла: ")
+    return name
+
+
+# import os
+# path = os.getcwd()
+# print(path + '\sem_8')
+# os.chdir(path+ '\sem_8') # устанавливаем рабочую директорию
+# print(os.getcwd()) # вывести рабочую директорию
+work_with_phonebook()
